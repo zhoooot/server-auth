@@ -12,6 +12,15 @@ services:
       - .env
     ports:
       - 3306:3306
+  phpmysql:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmysql
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
   redis:
     image: redis:5.0.5
     container_name: redis

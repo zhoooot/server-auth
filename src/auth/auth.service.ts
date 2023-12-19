@@ -1,16 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-
 import { UserService } from '../user/user.service';
 import { JwtPayLoad } from './dto/jwt-payload.dto';
 import { SignupDto } from './dto/signup.dto';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly redisService: RedisService,
   ) {}
 
   async signup(data: SignupDto) {
@@ -42,7 +43,15 @@ export class AuthService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
 
+    // Get the TTL of the refresh token
+    let ttl = this.jwtService.decode(refreshToken)['exp'];
+    ttl = ttl - Math.floor(Date.now() / 1000);
+
+    this.redisService.client.set(`AT:${refreshToken}`, user.auth_id);
+    this.redisService.client.expire(`AT:${refreshToken}`, ttl);
+
     return {
+      ...payload,
       accessToken,
       refreshToken,
     };

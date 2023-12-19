@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({}),
     UserModule,
     AuthModule,
+    RedisModule,
   ],
   providers: [PrismaService, UserService],
   exports: [UserService],
