@@ -27,12 +27,16 @@ export class UserService {
   }
 
   async createUser(data: CreateUserDto) {
-    return this.prisma.user.create({
-      data: {
-        ...data,
-        password: await this.hashPassword(data.password),
-      },
-    });
+    try {
+      return await this.prisma.user.create({
+        data: {
+          ...data,
+          password: await this.hashPassword(data.password),
+        },
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   async removeUser(id: string) {

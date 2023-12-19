@@ -4,9 +4,15 @@ import { PrismaService } from './prisma.service';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { AuthModule } from './auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    JwtModule.register({}),
+    UserModule,
+    AuthModule,
+  ],
   providers: [PrismaService, UserService],
   exports: [UserService],
 })
