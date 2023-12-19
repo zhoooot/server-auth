@@ -21,6 +21,8 @@ model User {
   password  String
   role      Role     @default(USER)
   updatedAt DateTime @updatedAt
+
+  @@index([email])
 }
 
 enum BlacklistType {
@@ -29,8 +31,9 @@ enum BlacklistType {
 }
 
 model Blacklist {
-  id        Int           @id @default(autoincrement())
   type      BlacklistType
   data      String
   createdAt DateTime      @default(now())
+
+  @@id([type, data])
 }
