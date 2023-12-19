@@ -1,4 +1,5 @@
-import { Injectable, Request } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Request } from 'express';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayLoad } from '../dto/jwt-payload.dto';
@@ -13,10 +14,20 @@ export class RtStrategy extends PassportStrategy(Strategy, 'rt') {
     });
   }
 
+  /**
+   * Return the refresh token and the authId
+   * for the logout
+   */
+
   validate(req: Request, payload: JwtPayLoad) {
-    const refreshToken = req['Authorization'].split(' ')[1];
+    const [bearer, refreshToken] = req.headers.authorization.split(' ');
+
+    if (bearer !== 'Bearer') {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
+
     return {
-      ...payload,
+      authId: payload.auth_id,
       refreshToken,
     };
   }

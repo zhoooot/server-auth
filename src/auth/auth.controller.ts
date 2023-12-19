@@ -4,7 +4,7 @@ import { LocalAuthGuard } from './guard/local-auth.guard';
 import { JoiGuard } from './guard/joi.guard';
 import { loginSchema } from './dto/login.dto';
 import { SignupDto, signupSchema } from './dto/signup.dto';
-import { AtAuthGuard } from './guard/at-auth.guard';
+import { RtAuthGuard } from './guard/rt-auth.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -22,11 +22,19 @@ export class AuthController {
     return await this.authService.signup(body);
   }
 
-  @UseGuards(AtAuthGuard)
+  @UseGuards(RtAuthGuard)
   @Post('logout')
   async logout(@Request() req: any) {
     const { refreshToken } = req.user;
 
     return await this.authService.logout(refreshToken);
+  }
+
+  @UseGuards(RtAuthGuard)
+  @Post('refresh')
+  async refresh(@Request() req: any) {
+    const { refreshToken } = req.body;
+
+    return await this.authService.refresh(refreshToken);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -15,11 +15,20 @@ export class AtStrategy extends PassportStrategy(Strategy, 'at') {
   }
 
   validate(req: Request, payload: JwtPayLoad) {
-    const refreshToken = req.get('Authorization').replace('Bearer ', '').trim();
+    const [bearer, accessToken] = req.headers.authorization.split(' ');
+
+    if (bearer !== 'Bearer') {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * Just in case in the future we need to get the payload
+     * For now: the refresh token is enough
+     */
 
     return {
       ...payload,
-      refreshToken,
+      accessToken,
     };
   }
 }

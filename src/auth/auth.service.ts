@@ -14,6 +14,25 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {}
 
+  async refresh(refreshToken: any) {
+    const payload = await this.jwtService.verifyAsync(refreshToken, {
+      secret: process.env.RT_SECRET,
+    });
+
+    const user = await this.userService.findUserByEmail(payload.email);
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const accessToken = this.generateAccessToken(payload);
+
+    return {
+      ...payload,
+      accessToken,
+    };
+  }
+
   async signup(data: SignupDto) {
     const user = await this.userService.createUser({
       email: data.email,
@@ -43,13 +62,6 @@ export class AuthService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
 
-    // Get the TTL of the refresh token
-    let ttl = this.jwtService.decode(refreshToken)['exp'];
-    ttl = ttl - Math.floor(Date.now() / 1000);
-
-    this.redisService.client.set(`AT:${refreshToken}`, user.auth_id);
-    this.redisService.client.expire(`AT:${refreshToken}`, ttl);
-
     return {
       ...payload,
       accessToken,
@@ -58,26 +70,13 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    const isTokenValid = await this.redisService.client.exists(
-      `AT:${refreshToken}`,
-    );
+    // Add the token to the blacklist
+    await this.redisService.client.set(`RT:${refreshToken}`, 'true');
 
-    if (!isTokenValid) {
-      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
-    }
+    let ttl = await this.jwtService.decode(refreshToken).exp;
+    ttl = ttl - Math.floor(Date.now() / 1000);
 
-    await this.redisService.client.del(`AT:${refreshToken}`);
-
-    const isDeleted = await this.redisService.client.exists(
-      `AT:${refreshToken}`,
-    );
-
-    if (isDeleted) {
-      throw new HttpException(
-        'Something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    await this.redisService.client.expire(`RT:${refreshToken}`, ttl);
 
     return {
       message: 'Logout successful',
