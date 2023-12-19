@@ -4,6 +4,7 @@ import { LocalAuthGuard } from './guard/local-auth.guard';
 import { JoiGuard } from './guard/joi.guard';
 import { loginSchema } from './dto/login.dto';
 import { SignupDto, signupSchema } from './dto/signup.dto';
+import { AtAuthGuard } from './guard/at-auth.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -19,5 +20,13 @@ export class AuthController {
   @Post('signup')
   async signup(@Body() body: SignupDto) {
     return await this.authService.signup(body);
+  }
+
+  @UseGuards(AtAuthGuard)
+  @Post('logout')
+  async logout(@Request() req: any) {
+    const { refreshToken } = req.user;
+
+    return await this.authService.logout(refreshToken);
   }
 }

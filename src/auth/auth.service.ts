@@ -57,6 +57,33 @@ export class AuthService {
     };
   }
 
+  async logout(refreshToken: string) {
+    const isTokenValid = await this.redisService.client.exists(
+      `AT:${refreshToken}`,
+    );
+
+    if (!isTokenValid) {
+      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+    }
+
+    await this.redisService.client.del(`AT:${refreshToken}`);
+
+    const isDeleted = await this.redisService.client.exists(
+      `AT:${refreshToken}`,
+    );
+
+    if (isDeleted) {
+      throw new HttpException(
+        'Something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return {
+      message: 'Logout successful',
+    };
+  }
+
   generateRefreshToken(user: JwtPayLoad) {
     const payload: JwtPayLoad = {
       auth_id: user.auth_id,
