@@ -8,29 +8,28 @@ services:
     image: mysql:5.7
     container_name: mysql
     restart: always
+    hostname: mysql
     env_file:
       - .env
     ports:
       - 3306:3306
-  phpmysql:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmysql
-    restart: always
-    ports:
-      - 8080:80
-    environment:
-      PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  # phpmysql:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: phpmysql
+  #   restart: always
+  #   ports:
+  #     - 8080:80
+  #   environment:
+  #     PMA_HOST: mysql
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
   redis:
     image: redis:5.0.5
     container_name: redis
+    hostname: redis
     restart: always
     ports:
       - 6379:6379
-  rabbitmq:
-    image: rabbitmq:3.7.15-management
-    container_name: rabbitmq
-    restart: always
-    ports:
-      - 5672:5672
-      - 15672:15672
+
+networks:
+  default:
+    driver: bridge
