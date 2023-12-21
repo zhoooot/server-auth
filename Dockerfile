@@ -2,7 +2,7 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 COPY package*.json .
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npx prisma generate
@@ -17,4 +17,3 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 
 EXPOSE 4006
-CMD ["npm", "run", "start:prod"]
