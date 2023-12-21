@@ -16,4 +16,14 @@ COPY --from=build /app/package*.json .
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 
+RUN touch entrypoint.sh
+
+RUN echo "#!/bin/sh" >> entrypoint.sh
+RUN echo "npx prisma migrate deploy" >> entrypoint.sh
+RUN echo "npm run start:prod" >> entrypoint.sh
+
+RUN chmod +x entrypoint.sh
+
 EXPOSE 4006
+
+ENTRYPOINT ["./entrypoint.sh"]
