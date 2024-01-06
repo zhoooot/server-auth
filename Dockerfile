@@ -18,6 +18,7 @@ COPY --from=builder /app/dist ./dist
 # Create the script file
 # Up the migration and start the server
 RUN echo "#!/bin/sh" > /app/start.sh
+RUN echo "set -e" >> /app/start.sh
 RUN echo "npx mikro-orm migration:up" >> /app/start.sh
 RUN echo "npm run start:prod" >> /app/start.sh
 RUN chmod +x /app/start.sh
