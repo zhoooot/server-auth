@@ -1,40 +1,72 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guard/local-auth.guard';
-import { JoiGuard } from './guard/joi.guard';
-import { loginSchema } from './dto/login.dto';
-import { SignupDto, signupSchema } from './dto/signup.dto';
-import { RtAuthGuard } from './guard/rt-auth.guard';
+import { LoginDto, loginDtoSchema } from './dtos/login.dto';
+import { ZodValidateGuard } from 'src/common/guard/zod-validate.dto';
+import { JwtService } from 'src/jwt/jwt.service';
+import { JwtDto } from 'src/common/dtos/payload.dto';
+import { JwtGuard } from 'src/jwt/guard/jwt.guard';
 
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authSerive: AuthService,
+    private jwtService: JwtService,
+  ) {}
 
-  @UseGuards(new JoiGuard(loginSchema), LocalAuthGuard)
-  @Post('login')
-  login(@Request() req: any) {
-    return this.authService.login(req.user);
+  @UseGuards(new ZodValidateGuard(loginDtoSchema))
+  @Post('/login')
+  async login(@Body() body: LoginDto) {
+    const { email, password } = body;
+
+    const user = await this.authSerive.validateUser(email, password);
+
+    if (!user) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const payload: JwtDto = {
+      sub: user.auth_id,
+      email: user.email,
+      role: user.role,
+      iat: Date.now(),
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    };
+
+    return {
+      token: await this.jwtService.sign(payload),
+    };
   }
 
-  @UseGuards(new JoiGuard(signupSchema))
-  @Post('signup')
-  async signup(@Body() body: SignupDto) {
-    return await this.authService.signup(body);
+  @UseGuards(new ZodValidateGuard(loginDtoSchema))
+  @Post('/register')
+  async register(@Body() body: LoginDto) {
+    const { email, password } = body;
+
+    await this.authSerive.register(email, password);
   }
 
-  @UseGuards(RtAuthGuard)
-  @Post('logout')
-  async logout(@Request() req: any) {
-    const { refreshToken } = req.user;
+  @UseGuards(JwtGuard)
+  @Post('/authenticate')
+  async authenticate(@Req() { user }: { user: JwtDto }) {
+    if (this.authSerive.validateJwtPayload(user) === null) {
+      throw new BadRequestException('Invalid credentials');
+    }
 
-    return await this.authService.logout(refreshToken);
-  }
+    const updateUser = {
+      ...user,
+      iat: Date.now(),
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    };
 
-  @UseGuards(RtAuthGuard)
-  @Post('refresh')
-  async refresh(@Request() req: any) {
-    const { refreshToken } = req.body;
-
-    return await this.authService.refresh(refreshToken);
+    return {
+      token: await this.jwtService.sign(updateUser),
+    };
   }
 }

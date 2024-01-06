@@ -1,29 +1,30 @@
-FROM node:18-alpine AS build
+FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json .
-RUN npm ci
+RUN npm install
 
 COPY . .
-RUN npx prisma generate
 RUN npm run build
 
 FROM node:18-alpine
 WORKDIR /app
 
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package*.json .
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/dist ./dist
+COPY --from=builder /app/package*.json .
+RUN npm install --omit=dev
 
-RUN touch entrypoint.sh
+COPY --from=builder /app/dist ./dist
 
-RUN echo "#!/bin/sh" >> entrypoint.sh
-RUN echo "npx prisma migrate deploy" >> entrypoint.sh
-RUN echo "npm run start:prod" >> entrypoint.sh
+# Create the script file
+# Up the migration and start the server
+RUN echo "#!/bin/sh" > /app/start.sh
+RUN echo "npx mikro-orm migration:up" >> /app/start.sh
+RUN echo "npm run start:prod" >> /app/start.sh
+RUN chmod +x /app/start.sh
 
-RUN chmod +x entrypoint.sh
+ENV DATABASE_URL=
+ENV JWT_PRIVATE_KEY=
+ENV JWT_PUBLIC_KEY=
 
-EXPOSE 4006
-
-ENTRYPOINT ["./entrypoint.sh"]
+EXPOSE 3000
+CMD ["/app/start.sh"]
