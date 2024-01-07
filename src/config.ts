@@ -14,6 +14,10 @@ export const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY;
 
 export const SALT_ROUNDS = 10;
 
-export default {
-  DATABASE_URL,
+export const RABBITMQ_URL = process.env.RABBITMQ_URL;
+
+export const RABBITMQ_USER_EXCHANGE_NAME = 'user';
+
+export const RABBITMQ_USER_ROUTING_KEYS = {
+  created: `${RABBITMQ_USER_EXCHANGE_NAME}.register`,
 };

@@ -1,17 +1,19 @@
 {
-  "namespaces": [],
+  "namespaces": [
+    "public"
+  ],
+  "name": "public",
   "tables": [
     {
       "columns": {
         "auth_id": {
           "name": "auth_id",
-          "type": "varchar(36)",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 36,
-          "mappedType": "string"
+          "mappedType": "uuid"
         },
         "email": {
           "name": "email",
@@ -33,7 +35,7 @@
         },
         "role": {
           "name": "role",
-          "type": "enum('user','admin')",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -47,7 +49,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "datetime",
+          "type": "timestamptz(0)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -57,9 +59,10 @@
         }
       },
       "name": "user",
+      "schema": "public",
       "indexes": [
         {
-          "keyName": "PRIMARY",
+          "keyName": "user_pkey",
           "columnNames": [
             "auth_id"
           ],

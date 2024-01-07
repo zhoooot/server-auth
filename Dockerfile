@@ -2,7 +2,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json .
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
@@ -24,8 +24,14 @@ RUN echo "npm run start:prod" >> /app/start.sh
 RUN chmod +x /app/start.sh
 
 ENV DATABASE_URL=
+ENV REDIS_URL=
+ENV GOOGLE_MAILER_CLIENT_ID=
+ENV GOOGLE_MAILER_CLIENT_SECRET=
+ENV GOOGLE_MAILER_REFRESH_TOKEN=
+ENV ADMIN_EMAIL_ADDRESS=
 ENV JWT_PRIVATE_KEY=
 ENV JWT_PUBLIC_KEY=
 
-EXPOSE 3000
+
+EXPOSE 4006
 CMD ["/app/start.sh"]
