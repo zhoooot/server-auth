@@ -5,16 +5,22 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { MAIL_USER, REDIS_URL } from 'src/config';
+import {
+  ADMIN_EMAIL_ADDRESS,
+  GOOGLE_MAILER_CLIENT_ID,
+  GOOGLE_MAILER_CLIENT_SECRET,
+  GOOGLE_MAILER_REFRESH_TOKEN,
+  REDIS_URL,
+} from 'src/config';
 import { createClient } from 'redis';
 import { generate } from 'otp-generator';
 import { google } from 'googleapis';
-import { createTransport } from 'nodemailer';
+import { Transporter, createTransport } from 'nodemailer';
 
 @Injectable()
 export class EmailService implements OnModuleInit, OnModuleDestroy {
   private client = createClient({ url: REDIS_URL });
-  private email;
+  private email: Transporter;
 
   private logger = new Logger(EmailService.name);
 
@@ -28,13 +34,13 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     const { OAuth2 } = google.auth;
 
     const oauth2Client = new OAuth2(
-      process.env.GOOGLE_MAILER_CLIENT_ID,
-      process.env.GOOGLE_MAILER_CLIENT_SECRET,
+      GOOGLE_MAILER_CLIENT_ID,
+      GOOGLE_MAILER_CLIENT_SECRET,
       'https://developers.google.com/oauthplayground',
     );
 
     oauth2Client.setCredentials({
-      refresh_token: process.env.GOOGLE_MAILER_REFRESH_TOKEN,
+      refresh_token: GOOGLE_MAILER_REFRESH_TOKEN,
     });
 
     const accessToken = await oauth2Client.getAccessToken();
@@ -43,10 +49,10 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       service: 'gmail',
       auth: {
         type: 'OAuth2',
-        user: process.env.ADMIN_EMAIL_ADDRESS,
-        clientId: process.env.GOOGLE_MAILER_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_MAILER_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_MAILER_REFRESH_TOKEN,
+        user: ADMIN_EMAIL_ADDRESS,
+        clientId: GOOGLE_MAILER_CLIENT_ID,
+        clientSecret: GOOGLE_MAILER_CLIENT_SECRET,
+        refreshToken: GOOGLE_MAILER_REFRESH_TOKEN,
         accessToken: accessToken.token,
       },
     });
@@ -74,7 +80,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     await this.client.expire(email, 60 * 5);
 
     await this.email.sendMail({
-      from: MAIL_USER,
+      from: ADMIN_EMAIL_ADDRESS,
       to: email,
       subject: 'OTP',
       text: `Your OTP is ${otp}`,
