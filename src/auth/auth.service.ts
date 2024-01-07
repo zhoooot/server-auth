@@ -67,4 +67,26 @@ export class AuthService {
 
     return newUser;
   }
+
+  async findUserByEmail(email: string) {
+    return await this.em.findOne(User, {
+      email,
+    });
+  }
+
+  async changePassword(email: string, newPassword: string) {
+    const user = await this.em.findOne(User, {
+      email,
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid email or password');
+    }
+
+    user.password = await this.hashPassword(newPassword);
+
+    await this.em.persistAndFlush(user);
+
+    return user;
+  }
 }

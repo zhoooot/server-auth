@@ -12,12 +12,14 @@ import { ZodValidateGuard } from 'src/common/guard/zod-validate.dto';
 import { JwtService } from 'src/jwt/jwt.service';
 import { JwtDto } from 'src/common/dtos/payload.dto';
 import { JwtGuard } from 'src/jwt/guard/jwt.guard';
+import { EmailService } from 'src/email/email.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authSerive: AuthService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   @UseGuards(new ZodValidateGuard(loginDtoSchema))
@@ -68,5 +70,32 @@ export class AuthController {
     return {
       token: await this.jwtService.sign(updateUser),
     };
+  }
+
+  @Post('/forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    await this.emailService.sendEmail(email);
+  }
+
+  @Post('/verify-otp')
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    await this.emailService.verifyOtp(body.email, body.otp);
+  }
+
+  @Post('/change-password-with-otp')
+  async changePasswordWithOtp(
+    @Body() body: { email: string; otp: string; password: string },
+  ) {
+    await this.emailService.verifyOtp(body.email, body.otp);
+    await this.authSerive.changePassword(body.email, body.password);
+  }
+
+  @Post('/change-password')
+  @UseGuards(JwtGuard)
+  async changePassword(
+    @Req() { user }: { user: JwtDto },
+    @Body() body: { password: string },
+  ) {
+    await this.authSerive.changePassword(user.email, body.password);
   }
 }
