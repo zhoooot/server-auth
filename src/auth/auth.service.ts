@@ -4,6 +4,7 @@ import { compare, hash } from 'bcrypt';
 import { EntityManager } from '@mikro-orm/mysql';
 import { SALT_ROUNDS } from 'src/config';
 import { JwtDto } from 'src/common/dtos/payload.dto';
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class AuthService {
@@ -87,6 +88,19 @@ export class AuthService {
 
     await this.em.persistAndFlush(user);
 
+    return user;
+  }
+
+  @RabbitSubscribe({
+    exchange: 'user',
+    routingKey: 'user.delete',
+  })
+  async removeUser(auth_id: string) {
+    const user = await this.em.findOne(User, {
+      auth_id: auth_id,
+    });
+
+    await this.em.removeAndFlush(user);
     return user;
   }
 }
