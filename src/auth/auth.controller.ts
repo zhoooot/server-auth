@@ -14,12 +14,6 @@ import { JwtDto } from 'src/common/dtos/payload.dto';
 import { JwtGuard } from 'src/jwt/guard/jwt.guard';
 import { EmailService } from 'src/email/email.service';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import {
-  RABBITMQ_USER_EXCHANGE_NAME,
-  RABBITMQ_USER_ROUTING_KEYS,
-} from 'src/config';
-import { User, UserRole } from 'src/entities/user.entity';
-import { v4 } from 'uuid';
 
 @Controller('auth')
 export class AuthController {
@@ -64,6 +58,9 @@ export class AuthController {
     await this.authSerive.register(email, password);
 
     // Send to the user service
+    this.amqpConnection.publish('user', 'user.register', {
+      email,
+    });
   }
 
   @UseGuards(JwtGuard)
@@ -109,29 +106,5 @@ export class AuthController {
     @Body() body: { password: string },
   ) {
     await this.authSerive.changePassword(user.email, body.password);
-  }
-
-  @Post('/dummy-user')
-  async sendDummyUser() {
-    const user: User = {
-      auth_id: v4(),
-      email: 'sample@email.com',
-      role: UserRole.USER,
-      created_at: new Date(),
-      password: '123456',
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...rest } = user;
-
-    this.amqpConnection.publish(
-      RABBITMQ_USER_EXCHANGE_NAME,
-      RABBITMQ_USER_ROUTING_KEYS.created,
-      rest,
-    );
-
-    return {
-      message: 'User created',
-    };
   }
 }

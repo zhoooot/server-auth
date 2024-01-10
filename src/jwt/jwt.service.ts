@@ -7,7 +7,7 @@ export class JwtService {
   private expiresIn: number = 60 * 60 * 24 * 7; // 7 days
 
   async sign(payload: any) {
-    console.log(payload);
+    // console.log(payload);
 
     return jwt.sign(payload, JWT_PRIVATE_KEY, {
       algorithm: 'RS256',

@@ -20,20 +20,6 @@ export class InitSeeder extends Seeder {
       {
         auth_id: '893d0698-8564-4f10-9a7c-aba55dd82a69',
         email: 'user2@sample.com',
-        password: 'matkhau12345',
-        created_at: new Date(),
-        role: UserRole.USER,
-      },
-      {
-        auth_id: 'ca0f2b4d-e2ae-432f-9873-06c8d30e231c',
-        email: 'user3@sample.com',
-        password: 'xinchaocs300',
-        created_at: new Date(),
-        role: UserRole.USER,
-      },
-      {
-        auth_id: '7f4bc1ab-f2d1-4c40-852d-d8377088cde0',
-        email: 'user4@sample.com',
         password: 'emiutruonghcmus123',
         created_at: new Date(),
         role: UserRole.USER,
@@ -52,7 +38,9 @@ export class InitSeeder extends Seeder {
         ...user,
         password: await this.hashPassword(user.password),
       });
-      await em.persistAndFlush(newUser);
+      em.persist(newUser);
     }
+
+    await em.flush();
   }
 }

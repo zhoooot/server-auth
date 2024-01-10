@@ -46,7 +46,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     const accessToken = await oauth2Client.getAccessToken();
 
     this.email = createTransport({
-      service: 'gmail',
+      host: 'gmail',
       auth: {
         type: 'OAuth2',
         user: ADMIN_EMAIL_ADDRESS,
