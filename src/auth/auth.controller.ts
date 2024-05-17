@@ -14,6 +14,7 @@ import { JwtDto } from 'src/common/dtos/payload.dto';
 import { JwtGuard } from 'src/jwt/guard/jwt.guard';
 import { EmailService } from 'src/email/email.service';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { CreatorService } from 'src/creator/creator.service';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +22,7 @@ export class AuthController {
     private authSerive: AuthService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private creatorService: CreatorService,
     private amqpConnection: AmqpConnection,
   ) {}
 
@@ -58,9 +60,10 @@ export class AuthController {
     await this.authSerive.register(email, password);
 
     // Send to the user service
-    this.amqpConnection.publish('user', 'user.register', {
-      email,
-    });
+    // this.amqpConnection.publish('user', 'user.register', {
+    //   email,
+    // });
+    // await this.creatorService.createCreator({ id: user.auth_id });
   }
 
   @UseGuards(JwtGuard)

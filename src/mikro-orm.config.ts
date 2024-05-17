@@ -1,12 +1,15 @@
 import { DATABASE_URL } from './config';
 
-import { Options } from '@mikro-orm/postgresql';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { User } from './entities/user.entity';
+import { Creator } from './entities/creator.entity';
+import { Migrator } from '@mikro-orm/migrations';
 
-export const config: Options = {
-  type: 'postgresql',
+export const config = {
+  driver: PostgreSqlDriver,
   clientUrl: DATABASE_URL,
-  entities: [User],
+  entities: [User, Creator],
+  extensions: [Migrator],
   migrations: {
     path: 'dist/migrations',
     pathTs: 'src/migrations',
@@ -22,9 +25,10 @@ export const config: Options = {
   },
   driverOptions: {
     connection: {
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false,
     },
   },
 };

@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { User, UserRole } from 'src/entities/user.entity';
 import { compare, hash } from 'bcrypt';
-import { EntityManager } from '@mikro-orm/mysql';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { SALT_ROUNDS } from 'src/config';
 import { JwtDto } from 'src/common/dtos/payload.dto';
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class AuthService {
@@ -91,10 +90,6 @@ export class AuthService {
     return user;
   }
 
-  @RabbitSubscribe({
-    exchange: 'user',
-    routingKey: 'user.delete',
-  })
   async removeUser(auth_id: string) {
     const user = await this.em.findOne(User, {
       auth_id: auth_id,
